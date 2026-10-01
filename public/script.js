@@ -1476,6 +1476,10 @@ async function doLukerUpdateCheck(versionData) {
         return;
     }
 
+    if (versionData.updateCheckDisabled === true) {
+        return;
+    }
+
     try {
         const response = await fetch('/api/system/update-check', { 
             method: 'POST',

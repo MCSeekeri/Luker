@@ -127,11 +127,15 @@ export function getBasicAuthHeader(auth) {
     return `Basic ${encoded}`;
 }
 
+export function isUpdateCheckDisabled() {
+    return getConfigValue('luker.disableUpdateCheck', false, 'boolean');
+}
+
 /**
  * Returns the version of the running instance. Get the version from package.json and git metadata.
  * Also returns the agent string for the Horde API.
  * Performs only local reads; use checkRemoteVersion() for the upstream tag comparison.
- * @returns {Promise<{agent: string, compatAgent: string, stCompatVersion: string, pkgVersion: string, gitRevision: string | null, gitBranch: string | null, commitDate: string | null, isDocker: boolean}>} Version info object
+ * @returns {Promise<{agent: string, compatAgent: string, stCompatVersion: string, pkgVersion: string, gitRevision: string | null, gitBranch: string | null, commitDate: string | null, isDocker: boolean, updateCheckDisabled: boolean}>} Version info object
  */
 export async function getVersion() {
     let pkgVersion = 'UNKNOWN';
@@ -161,14 +165,20 @@ export async function getVersion() {
     const agent = `Luker:${pkgVersion}:Cohee#1207`;
     const compatAgent = `Luker:${stCompatVersion}:Cohee#1207`;
     const isDockerRuntime = isDocker();
-    return { agent, compatAgent, stCompatVersion, pkgVersion, gitRevision, gitBranch, commitDate: commitDate?.trim() ?? null, isDocker: isDockerRuntime };
+    return { agent, compatAgent, stCompatVersion, pkgVersion, gitRevision, gitBranch, commitDate: commitDate?.trim() ?? null, isDocker: isDockerRuntime, updateCheckDisabled: isUpdateCheckDisabled() };
 }
 
 /**
  * Checks GitHub for the latest release tag and determines if an update is available.
- * @returns {Promise<{isLatest: boolean}>} Update info
+ * Returns immediately, without touching the network, when the check is disabled via
+ * LUKER_DISABLE_UPDATE_CHECK.
+ * @returns {Promise<{isLatest: boolean, updateCheckDisabled?: boolean}>} Update info
  */
 export async function checkRemoteVersion() {
+    if (isUpdateCheckDisabled()) {
+        return { isLatest: true, updateCheckDisabled: true };
+    }
+
     let isLatest = true;
     try {
         const require = createRequire(import.meta.url);

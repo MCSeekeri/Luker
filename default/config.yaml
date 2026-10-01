@@ -452,3 +452,6 @@ gemini:
 enableServerPlugins: false
 # Attempt to automatically update server plugins on startup
 enableServerPluginsAutoUpdate: true
+
+luker:
+  disableUpdateCheck: false

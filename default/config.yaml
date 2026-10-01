@@ -452,6 +452,11 @@ gemini:
 enableServerPlugins: false
 # Attempt to automatically update server plugins on startup
 enableServerPluginsAutoUpdate: true
-
-luker:
-  disableUpdateCheck: false
+# -- UPDATE CHECK CONFIGURATION --
+# Check for newer tagged releases on startup and in the client, and offer to
+# update when one is found. Disable for installs whose version is managed
+# elsewhere, such as Nix or a system package manager.
+disableUpdateCheck: false
+# Grace period in milliseconds before a completed generation is persisted when
+# the client has not acknowledged it yet. Minimum 1000.
+generationAckGraceMs: 15000

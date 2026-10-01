@@ -13,7 +13,7 @@ const generationJobs = new Map();
 const LUKER_GENERATION_JOB_MAX_ITEMS = 128;
 const LUKER_GENERATION_JOB_TTL_MS = 2 * 60 * 60 * 1000;
 const LUKER_GENERATION_JOB_MAX_EVENTS = 8000;
-const LUKER_GENERATION_ACK_GRACE_MS = Math.max(1000, Number(getConfigValue('luker.generationAckGraceMs', 15_000, 'number')) || 15_000);
+const LUKER_GENERATION_ACK_GRACE_MS = Math.max(1000, Number(getConfigValue('generationAckGraceMs', 15_000, 'number')) || 15_000);
 
 function normalizePersistJsonlFileName(fileName) {
     const raw = String(fileName || '').trim();

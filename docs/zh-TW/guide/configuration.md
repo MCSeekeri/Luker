@@ -226,12 +226,17 @@ thumbnails:
 requestInspector:
   ttlMs: 7200000
   cleanupIntervalMs: 300000
+
+disableUpdateCheck: false
+generationAckGraceMs: 15000
 ```
 
 - `logging`：日誌設定，`minLogLevel` 控制最低日誌等級
 - `rateLimiting`：速率限制，`preferRealIpHeader` 在反向代理後使用真實 IP
 - `thumbnails`：縮圖產生設定
 - `requestInspector`：請求記錄的記憶體保留，見[請求檢查器](/zh-TW/improvements/request-inspector#記錄保留)
+- `disableUpdateCheck`：跳過啟動時與前端的更新檢查，適用於版本由 Nix 或系統套件管理器等外部管道管理的安裝
+- `generationAckGraceMs`：前端未確認生成結果時的持久化寬限期，單位為毫秒，最小 1000
 
 ## 外掛與擴充路徑
 

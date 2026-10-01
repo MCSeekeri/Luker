@@ -226,12 +226,17 @@ thumbnails:
 requestInspector:
   ttlMs: 7200000
   cleanupIntervalMs: 300000
+
+disableUpdateCheck: false
+generationAckGraceMs: 15000
 ```
 
 - `logging`: Log configuration; `minLogLevel` controls the minimum log level
 - `rateLimiting`: Rate limiting; `preferRealIpHeader` uses the real IP behind a reverse proxy
 - `thumbnails`: Thumbnail generation configuration
 - `requestInspector`: In-memory request record retention; see [Request Inspector](/improvements/request-inspector#record-retention)
+- `disableUpdateCheck`: Skips the startup and client update check for installs whose version is managed elsewhere, such as Nix or a system package manager
+- `generationAckGraceMs`: Grace period in milliseconds before a completed generation is persisted when the client has not acknowledged it yet; minimum 1000
 
 ## Plugin and Extension Paths
 

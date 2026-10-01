@@ -5,12 +5,12 @@ import path from 'node:path';
 
 let util;
 
-const ENV_KEY = 'SILLYTAVERN_LUKER_DISABLEUPDATECHECK';
+const ENV_KEY = 'SILLYTAVERN_DISABLEUPDATECHECK';
 const scratchDir = fs.mkdtempSync(path.join(os.tmpdir(), 'luker-update-check-'));
 
 function useConfigValue(value) {
     const configPath = path.join(scratchDir, `config-${value}.yaml`);
-    fs.writeFileSync(configPath, `luker:\n  disableUpdateCheck: ${value}\n`);
+    fs.writeFileSync(configPath, `disableUpdateCheck: ${value}\n`);
     util.setConfigFilePath(configPath);
     util.reloadConfigCache();
 }
@@ -31,7 +31,7 @@ afterAll(() => {
     fs.rmSync(scratchDir, { recursive: true, force: true });
 });
 
-describe('luker.disableUpdateCheck', () => {
+describe('disableUpdateCheck', () => {
     test('keeps the update check enabled by default', () => {
         useConfigValue(false);
         expect(util.isUpdateCheckDisabled()).toBe(false);

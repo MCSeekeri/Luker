@@ -134,6 +134,11 @@ const keyMigrationMap = [
         newKey: 'sso.authentikAuth',
         migrate: (value) => value,
     },
+    {
+        oldKey: 'luker.generationAckGraceMs',
+        newKey: 'generationAckGraceMs',
+        migrate: (value) => value,
+    },
 ];
 
 /**

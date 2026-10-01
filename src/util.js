@@ -128,7 +128,7 @@ export function getBasicAuthHeader(auth) {
 }
 
 export function isUpdateCheckDisabled() {
-    return getConfigValue('luker.disableUpdateCheck', false, 'boolean');
+    return getConfigValue('disableUpdateCheck', false, 'boolean');
 }
 
 /**
@@ -171,7 +171,8 @@ export async function getVersion() {
 /**
  * Checks GitHub for the latest release tag and determines if an update is available.
  * Returns immediately, without touching the network, when the check is disabled via
- * LUKER_DISABLE_UPDATE_CHECK.
+ * the disableUpdateCheck configuration key or its LUKER_DISABLEUPDATECHECK /
+ * SILLYTAVERN_DISABLEUPDATECHECK environment override.
  * @returns {Promise<{isLatest: boolean, updateCheckDisabled?: boolean}>} Update info
  */
 export async function checkRemoteVersion() {

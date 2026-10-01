@@ -5,7 +5,8 @@ import path from 'node:path';
 
 let util;
 
-const ENV_KEY = 'SILLYTAVERN_DISABLEUPDATECHECK';
+const SILLYTAVERN_ENV_KEY = 'SILLYTAVERN_DISABLEUPDATECHECK';
+const LUKER_ENV_KEY = 'LUKER_DISABLEUPDATECHECK';
 const scratchDir = fs.mkdtempSync(path.join(os.tmpdir(), 'luker-update-check-'));
 
 function useConfigValue(value) {
@@ -24,7 +25,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-    delete process.env[ENV_KEY];
+    delete process.env[SILLYTAVERN_ENV_KEY];
+    delete process.env[LUKER_ENV_KEY];
 });
 
 afterAll(() => {
@@ -44,12 +46,21 @@ describe('disableUpdateCheck', () => {
 
     test('the SILLYTAVERN_ environment override takes precedence over the config file', () => {
         useConfigValue(false);
-        process.env[ENV_KEY] = 'true';
+        process.env[SILLYTAVERN_ENV_KEY] = 'true';
         expect(util.isUpdateCheckDisabled()).toBe(true);
 
         useConfigValue(true);
-        process.env[ENV_KEY] = 'false';
+        process.env[SILLYTAVERN_ENV_KEY] = 'false';
         expect(util.isUpdateCheckDisabled()).toBe(false);
+    });
+
+    test('the LUKER_ environment override takes precedence over SILLYTAVERN_ and the config file', () => {
+        useConfigValue(false);
+        process.env[LUKER_ENV_KEY] = 'true';
+        expect(util.isUpdateCheckDisabled()).toBe(true);
+
+        process.env[SILLYTAVERN_ENV_KEY] = 'false';
+        expect(util.isUpdateCheckDisabled()).toBe(true);
     });
 
     test('checkRemoteVersion short-circuits to the disabled marker instead of a probe result', async () => {

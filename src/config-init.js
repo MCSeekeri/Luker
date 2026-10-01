@@ -181,7 +181,9 @@ export function addMissingConfigValues(configPath) {
         // Migrate old keys to new keys
         const migratedKeys = [];
         for (const { oldKey, newKey, migrate, remove } of keyMigrationMap) {
-            // Migrate environment variables
+            // Migrate environment variables. Only the SILLYTAVERN_ prefix can
+            // name a pre-existing key; the LUKER_ prefix was introduced
+            // alongside the current key set and never named a deprecated one.
             const oldEnvKey = keyToEnv(oldKey);
             const newEnvKey = keyToEnv(newKey);
             if (process.env[oldEnvKey] && !process.env[newEnvKey]) {

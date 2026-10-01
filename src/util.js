@@ -39,6 +39,40 @@ let CONFIG_PATH = null;
 export const keyToEnv = (key) => 'SILLYTAVERN_' + String(key).toUpperCase().replace(/\./g, '_');
 
 /**
+ * Converts a configuration key to a Luker-prefixed environment variable key.
+ * @param {string} key Configuration key
+ * @returns {string} Environment variable key
+ * @example keyToLukerEnv('disableUpdateCheck') // 'LUKER_DISABLEUPDATECHECK'
+ */
+export const keyToLukerEnv = (key) => 'LUKER_' + String(key).toUpperCase().replace(/\./g, '_');
+
+/**
+ * Upper-cases a key and splits camelCase word boundaries into underscores.
+ * @param {string} key Configuration key
+ * @returns {string} Snake-case environment variable suffix
+ */
+const toSnakeCaseEnv = (key) => String(key).replace(/([a-z0-9])([A-Z])/g, '$1_$2').toUpperCase().replace(/\./g, '_');
+
+/**
+ * Returns every environment variable name accepted for a configuration key,
+ * in precedence order. Both the compact spelling and a snake_case spelling
+ * that splits camelCase word boundaries are accepted, under the LUKER_ and
+ * SILLYTAVERN_ prefixes; the LUKER_ forms win when more than one name is set.
+ * @param {string} key Configuration key
+ * @returns {string[]} Accepted environment variable names
+ * @example getConfigEnvKeys('disableUpdateCheck')
+ * // ['LUKER_DISABLEUPDATECHECK', 'LUKER_DISABLE_UPDATE_CHECK', 'SILLYTAVERN_DISABLEUPDATECHECK', 'SILLYTAVERN_DISABLE_UPDATE_CHECK']
+ */
+export function getConfigEnvKeys(key) {
+    return [...new Set([
+        keyToLukerEnv(key),
+        `LUKER_${toSnakeCaseEnv(key)}`,
+        keyToEnv(key),
+        `SILLYTAVERN_${toSnakeCaseEnv(key)}`,
+    ])];
+}
+
+/**
  * Set the config file path.
  * @param {string} configFilePath Path to the config file
  */
@@ -89,6 +123,11 @@ export function getConfig() {
 
 /**
  * Returns the value for the given key from the config object.
+ * Environment variables are checked first, under both the SILLYTAVERN_ and
+ * LUKER_ prefixes; the LUKER_ forms win when more than one is set. Both the
+ * compact spelling and a snake_case spelling that splits camelCase word
+ * boundaries are accepted, so `disableUpdateCheck` can be set as
+ * LUKER_DISABLEUPDATECHECK or LUKER_DISABLE_UPDATE_CHECK.
  * @param {string} key - Key to get from the config object
  * @param {any} defaultValue - Default value to return if the key is not found
  * @param {'number'|'boolean'|null} typeConverter - Type to convert the value to
@@ -96,11 +135,12 @@ export function getConfig() {
  */
 export function getConfigValue(key, defaultValue = null, typeConverter = null) {
     function _getValue() {
-        const envKey = keyToEnv(key);
-        if (envKey in process.env) {
-            const needsJsonParse = defaultValue && typeof defaultValue === 'object';
-            const envValue = process.env[envKey];
-            return needsJsonParse ? (tryParse(envValue) ?? defaultValue) : envValue;
+        for (const envKey of getConfigEnvKeys(key)) {
+            if (envKey in process.env) {
+                const needsJsonParse = defaultValue && typeof defaultValue === 'object';
+                const envValue = process.env[envKey];
+                return needsJsonParse ? (tryParse(envValue) ?? defaultValue) : envValue;
+            }
         }
         const config = getConfig();
         return _.get(config, key, defaultValue);
@@ -171,8 +211,8 @@ export async function getVersion() {
 /**
  * Checks GitHub for the latest release tag and determines if an update is available.
  * Returns immediately, without touching the network, when the check is disabled via
- * the disableUpdateCheck configuration key or its LUKER_DISABLEUPDATECHECK /
- * SILLYTAVERN_DISABLEUPDATECHECK environment override.
+ * the disableUpdateCheck configuration key or its LUKER_ / SILLYTAVERN_ environment
+ * override.
  * @returns {Promise<{isLatest: boolean, updateCheckDisabled?: boolean}>} Update info
  */
 export async function checkRemoteVersion() {

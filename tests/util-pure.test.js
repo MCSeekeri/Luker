@@ -1,6 +1,8 @@
 import { describe, test, expect, jest } from '@jest/globals';
 import {
     keyToEnv,
+    keyToLukerEnv,
+    getConfigEnvKeys,
     getConfigValue,
     getBasicAuthHeader,
     getHexString,
@@ -50,6 +52,36 @@ describe('keyToEnv', () => {
     });
 });
 
+describe('keyToLukerEnv', () => {
+    test('should convert dotted key to LUKER_ env var format', () => {
+        expect(keyToLukerEnv('extensions.models.speechToText')).toBe('LUKER_EXTENSIONS_MODELS_SPEECHTOTEXT');
+    });
+
+    test('should handle simple key without dots', () => {
+        expect(keyToLukerEnv('disableUpdateCheck')).toBe('LUKER_DISABLEUPDATECHECK');
+    });
+});
+
+describe('getConfigEnvKeys', () => {
+    test('should list compact and snake_case spellings for both prefixes', () => {
+        expect(getConfigEnvKeys('disableUpdateCheck')).toEqual([
+            'LUKER_DISABLEUPDATECHECK',
+            'LUKER_DISABLE_UPDATE_CHECK',
+            'SILLYTAVERN_DISABLEUPDATECHECK',
+            'SILLYTAVERN_DISABLE_UPDATE_CHECK',
+        ]);
+    });
+
+    test('should not duplicate names for all-lowercase dotted keys', () => {
+        expect(getConfigEnvKeys('hostWhitelist.enabled')).toEqual([
+            'LUKER_HOSTWHITELIST_ENABLED',
+            'LUKER_HOST_WHITELIST_ENABLED',
+            'SILLYTAVERN_HOSTWHITELIST_ENABLED',
+            'SILLYTAVERN_HOST_WHITELIST_ENABLED',
+        ]);
+    });
+});
+
 describe('getConfigValue', () => {
     test('should parse env var "false" as boolean false with boolean converter', () => {
         const envKey = keyToEnv('hostWhitelist.enabled');
@@ -57,6 +89,42 @@ describe('getConfigValue', () => {
         process.env[envKey] = 'false';
 
         expect(getConfigValue('hostWhitelist.enabled', true, 'boolean')).toBe(false);
+
+        if (originalValue === undefined) {
+            delete process.env[envKey];
+        } else {
+            process.env[envKey] = originalValue;
+        }
+    });
+
+    test('should prefer the LUKER_ prefixed env var over the SILLYTAVERN_ one', () => {
+        const sillyTavernEnvKey = keyToEnv('hostWhitelist.enabled');
+        const lukerEnvKey = keyToLukerEnv('hostWhitelist.enabled');
+        const originalSillyTavernValue = process.env[sillyTavernEnvKey];
+        const originalLukerValue = process.env[lukerEnvKey];
+        process.env[sillyTavernEnvKey] = 'true';
+        process.env[lukerEnvKey] = 'false';
+
+        expect(getConfigValue('hostWhitelist.enabled', true, 'boolean')).toBe(false);
+
+        if (originalSillyTavernValue === undefined) {
+            delete process.env[sillyTavernEnvKey];
+        } else {
+            process.env[sillyTavernEnvKey] = originalSillyTavernValue;
+        }
+        if (originalLukerValue === undefined) {
+            delete process.env[lukerEnvKey];
+        } else {
+            process.env[lukerEnvKey] = originalLukerValue;
+        }
+    });
+
+    test('should accept the snake_case spelling of a camelCase key', () => {
+        const envKey = 'LUKER_DISABLE_UPDATE_CHECK';
+        const originalValue = process.env[envKey];
+        process.env[envKey] = 'true';
+
+        expect(getConfigValue('disableUpdateCheck', false, 'boolean')).toBe(true);
 
         if (originalValue === undefined) {
             delete process.env[envKey];
